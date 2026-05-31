@@ -133,7 +133,7 @@
               </div>
             </div>
 
-            <div>
+            <div class="hero-visual">
               <div class="bezel-outer">
                 <div class="bezel-inner">
                   <img
@@ -411,7 +411,11 @@
               </div>
             </div>
 
-            <p class="text-center text-xs text-[var(--text-dim)]">Auto-scroll · hover to pause · operator-submitted Telegram screenshots</p>
+            <p class="text-center text-xs text-[var(--text-dim)]">
+              <span class="hidden sm:inline">Auto-scroll · hover to pause · </span>
+              <span class="sm:hidden">Swipe horizontally · </span>
+              operator-submitted Telegram screenshots
+            </p>
           </div>
         </section>
 
@@ -437,10 +441,14 @@
             if (!group || !track) return;
 
             group.innerHTML = shots.map(figureHtml).join("");
-            track.insertAdjacentHTML(
-              "beforeend",
-              `<div class="tg-marquee__group" aria-hidden="true">${shots.map(figureHtml).join("")}</div>`
-            );
+
+            const isMobile = window.matchMedia("(max-width: 639px)").matches;
+            if (!isMobile) {
+              track.insertAdjacentHTML(
+                "beforeend",
+                `<div class="tg-marquee__group" aria-hidden="true">${shots.map(figureHtml).join("")}</div>`
+              );
+            }
           })();
         </script>
 
