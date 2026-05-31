@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZoneX Admin | Operations</title>
+    <link rel="icon" href="../dist/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="../zonex-design.css" />
+    <style>
+      body {
+        background: #050505;
+        color: #fdfcf5;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        margin: 0;
+        padding: 32px 24px 48px;
+      }
+      .admin-shell {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .admin-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+      }
+      .label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #888;
+      }
+      .label-accent {
+        color: #00ff7f;
+      }
+      .env-pill {
+        display: inline-block;
+        margin-top: 8px;
+        padding: 4px 10px;
+        border: 1px solid #222;
+        border-radius: 999px;
+        font-size: 10px;
+        color: #aaa;
+      }
+      .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+      .admin-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .full-width {
+        grid-column: 1 / -1;
+      }
+      .card {
+        background: #0d0d0d;
+        border: 1px solid #1a1a1a;
+        border-radius: 8px;
+        padding: 22px;
+      }
+      .kpi-card {
+        border-left: 3px solid #00ff7f;
+      }
+      .kpi-val {
+        font-size: 30px;
+        font-weight: 700;
+        color: #00ff7f;
+        margin-top: 8px;
+        line-height: 1.1;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 11px 8px;
+        font-size: 12px;
+        border-bottom: 1px solid #1a1a1a;
+      }
+      th {
+        color: #777;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+      }
+      input {
+        background: #000;
+        border: 1px solid #222;
+        color: #fff;
+        padding: 12px;
+        font-family: inherit;
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 4px;
+      }
+      input:focus {
+        border-color: #00ff7f;
+        outline: none;
+      }
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      button {
+        font-family: inherit;
+        padding: 11px 18px;
+        cursor: pointer;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        border-radius: 4px;
+      }
+      .btn-prime {
+        background: #00ff7f;
+        color: #000;
+        border: none;
+      }
+      .btn-danger {
+        background: transparent;
+        color: #ff4a4a;
+        border: 1px solid #ff4a4a;
+      }
+      .btn-sec {
+        background: transparent;
+        color: #fff;
+        border: 1px solid #333;
+      }
+      .status-ok {
+        color: #00ff7f;
+      }
+      .status-muted {
+        color: #888;
+        font-size: 12px;
+        margin-top: 12px;
+      }
+      .lookup-meta {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #1a1a1a;
+        font-size: 11px;
+        color: #aaa;
+        display: none;
+      }
+      .lookup-meta.visible {
+        display: grid;
+        gap: 6px;
+      }
+      @media (max-width: 960px) {
+        .admin-grid,
+        .kpi-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <div class="admin-top">
+        <div>
+          <div class="label label-accent">ZoneX Admin · Control Unit</div>
+          <div id="admin-user-label" style="font-size: 14px; color: #666; margin-top: 6px">Loading session…</div>
+          <span id="env-pill" class="env-pill">Environment: —</span>
+        </div>
+        <button type="button" class="btn-sec" id="logout-btn">Log out</button>
+      </div>
+
+      <div class="kpi-row">
+        <div class="card kpi-card">
+          <div class="label">Total system revenue</div>
+          <div class="kpi-val" id="total-rev">$0</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="label">Total licenses issued</div>
+          <div class="kpi-val" id="total-licenses">0</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="label">Average customer LTV</div>
+          <div class="kpi-val" id="avg-ltv">$200</div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <div class="card">
+          <div class="label" style="margin-bottom: 14px">License access provisioning</div>
+          <label class="label" for="mt5-target" style="display: block; margin-bottom: 8px">MT5 account number</label>
+          <input type="text" id="mt5-target" placeholder="e.g. 12345678" />
+          <div class="btn-group">
+            <button type="button" class="btn-sec" onclick="lookupOperator()">Lookup</button>
+            <button type="button" class="btn-prime" onclick="modifyLicense('ACTIVATE')">Activate</button>
+            <button type="button" class="btn-danger" onclick="modifyLicense('SUSPEND')">Suspend</button>
+          </div>
+          <div id="lookup-meta" class="lookup-meta"></div>
+          <div id="action-status" class="status-muted"></div>
+        </div>
+
+        <div class="card">
+          <div class="label">Monthly revenue metrics</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Billing month</th>
+                <th>Gross revenue</th>
+                <th>Closed units</th>
+              </tr>
+            </thead>
+            <tbody id="monthly-table-body">
+              <tr>
+                <td colspan="3" class="status-muted">Loading…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card full-width">
+          <div class="label">Recent account provisioning</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Operator email</th>
+                <th>MT5 terminal ID</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="activity-table-body">
+              <tr>
+                <td colspan="4" class="status-muted">Loading…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const api = (path, options = {}) => fetch(path, { credentials: "include", ...options });
+
+      async function ensureSession() {
+        const res = await api("/api/admin/session");
+        if (!res.ok) {
+          window.location.href = "/admin/login.html";
+          return null;
+        }
+        const data = await res.json();
+        document.getElementById("admin-user-label").textContent = `Signed in as ${data.username}`;
+        return data;
+      }
+
+      document.getElementById("logout-btn").addEventListener("click", async () => {
+        await api("/api/admin/logout", { method: "POST" });
+        window.location.href = "/admin/login.html";
+      });
+
+      async function loadAnalytics() {
+        const res = await api("/api/admin/analytics");
+        if (res.status === 401) {
+          window.location.href = "/admin/login.html";
+          return;
+        }
+        if (!res.ok) throw new Error("Could not load analytics.");
+
+        const data = await res.json();
+        document.getElementById("env-pill").textContent = data.mockMode
+          ? "Environment: mock sandbox"
+          : "Environment: supabase live";
+
+        document.getElementById("total-rev").textContent = `$${Number(data.totalRevenue).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+        document.getElementById("total-licenses").textContent = String(data.totalLicenses);
+        const avg = data.totalLicenses ? data.totalRevenue / data.totalLicenses : 200;
+        document.getElementById("avg-ltv").textContent = `$${avg.toFixed(2)}`;
+
+        const mBody = document.getElementById("monthly-table-body");
+        mBody.innerHTML =
+          data.monthlyBreakdown.length === 0
+            ? '<tr><td colspan="3">No confirmed sales yet.</td></tr>'
+            : data.monthlyBreakdown
+                .map(
+                  (m) => `<tr>
+              <td>${m.month}</td>
+              <td class="status-ok">$${Number(m.revenue).toLocaleString()}</td>
+              <td>${m.sales}</td>
+            </tr>`
+                )
+                .join("");
+
+        const aBody = document.getElementById("activity-table-body");
+        aBody.innerHTML =
+          data.recentActivity.length === 0
+            ? '<tr><td colspan="4">No recent activity.</td></tr>'
+            : data.recentActivity
+                .map(
+                  (a) => `<tr>
+              <td>${new Date(a.timestamp).toLocaleString()}</td>
+              <td>${a.email}</td>
+              <td><code>${a.mt5_account}</code></td>
+              <td class="status-ok">${a.status}</td>
+            </tr>`
+                )
+                .join("");
+      }
+
+      async function lookupOperator() {
+        const mt5 = document.getElementById("mt5-target").value.trim();
+        const meta = document.getElementById("lookup-meta");
+        const statusDiv = document.getElementById("action-status");
+        if (!mt5) {
+          statusDiv.textContent = "Enter an MT5 account number.";
+          return;
+        }
+
+        statusDiv.textContent = "Looking up account…";
+        const res = await api(`/api/admin/lookup-operator?account=${encodeURIComponent(mt5)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          meta.classList.remove("visible");
+          statusDiv.textContent = data.error || "Lookup failed.";
+          if (res.status === 401) window.location.href = "/admin/login.html";
+          return;
+        }
+
+        const r = data.record;
+        meta.classList.add("visible");
+        meta.innerHTML = `
+          <div>Email: ${r.email}</div>
+          <div>Broker: ${r.broker_id || "—"}</div>
+          <div>Payment: ${r.payment_status}</div>
+          <div>Access: ${r.access_granted ? "Active" : "Locked"}</div>
+        `;
+        statusDiv.textContent = "Account found.";
+      }
+
+      async function modifyLicense(action) {
+        const mt5 = document.getElementById("mt5-target").value.trim();
+        const statusDiv = document.getElementById("action-status");
+        if (!mt5) {
+          statusDiv.textContent = "MT5 account number is required.";
+          return;
+        }
+
+        statusDiv.textContent = `${action === "ACTIVATE" ? "Activating" : "Suspending"}…`;
+
+        try {
+          const res = await api("/api/admin/modify-access", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ account_id: mt5, status_action: action }),
+          });
+          const result = await res.json();
+          if (!res.ok) throw new Error(result.error || "Operation failed.");
+          statusDiv.textContent = result.message || "Operation confirmed.";
+          await lookupOperator();
+          await loadAnalytics();
+        } catch (err) {
+          statusDiv.textContent = err.message;
+          if (String(err.message).includes("401")) window.location.href = "/admin/login.html";
+        }
+      }
+
+      (async () => {
+        await ensureSession();
+        try {
+          await loadAnalytics();
+        } catch (err) {
+          document.getElementById("action-status").textContent = err.message;
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "zonex-bot-branding",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "setup:check": "node scripts/check-setup.js",
+    "results-bot": "node scripts/results-publisher/index.js",
+    "channel-ids": "node scripts/results-publisher/print-channel-ids.js",
+    "test": "echo \"No tests configured\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "resend": "^6.12.4",
+    "sharp": "^0.34.5",
+    "tesseract.js": "^7.0.0"
+  }
+}

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZoneX Admin | Sign in</title>
+    <link rel="icon" href="../dist/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="../zonex-design.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-[100dvh] bg-[#050505] text-white">
+    <div class="mesh-bg" aria-hidden="true"></div>
+    <div class="grid-fine" aria-hidden="true"></div>
+
+    <main class="relative flex min-h-[100dvh] items-center justify-center p-6">
+      <div class="w-full max-w-md rounded-3xl border border-[#161616] bg-[#090909]/90 p-8 shadow-2xl backdrop-blur-xl">
+        <div class="mb-8 border-b border-[#141416] pb-6">
+          <p class="font-mono text-[10px] uppercase tracking-[0.35em] text-[#00ff7f]">ZoneX Admin</p>
+          <h1 class="mt-2 text-2xl font-normal tracking-tight">Sign in</h1>
+          <p class="mt-2 text-sm text-zinc-500">License control panel</p>
+        </div>
+
+        <form id="login-form" class="space-y-5">
+          <div class="space-y-2">
+            <label for="username" class="block text-sm text-zinc-400">Username</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              autocomplete="username"
+              required
+              class="w-full rounded-xl border border-[#1a1a1c] bg-black px-4 py-3.5 text-white outline-none focus:border-[#00ff7f]/50"
+            />
+          </div>
+          <div class="space-y-2">
+            <label for="password" class="block text-sm text-zinc-400">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              class="w-full rounded-xl border border-[#1a1a1c] bg-black px-4 py-3.5 text-white outline-none focus:border-[#00ff7f]/50"
+            />
+          </div>
+
+          <p id="login-error" class="hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300"></p>
+
+          <button
+            type="submit"
+            id="login-btn"
+            class="w-full rounded-full bg-[#00ff7f] py-3.5 text-sm font-semibold text-[#050505] transition-transform active:scale-[0.98]"
+          >
+            Sign in
+          </button>
+        </form>
+
+        <p class="mt-6 text-center text-xs text-zinc-600">
+          <a href="../index.html" class="text-zinc-500 hover:text-[#00ff7f]">← Back to site</a>
+        </p>
+      </div>
+    </main>
+
+    <script>
+      (async () => {
+        try {
+          const session = await fetch("/api/admin/session", { credentials: "include" });
+          if (session.ok) {
+            window.location.href = "/admin/terminal.html";
+            return;
+          }
+        } catch {
+          /* stay on login */
+        }
+
+        const form = document.getElementById("login-form");
+        const errorEl = document.getElementById("login-error");
+        const btn = document.getElementById("login-btn");
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          errorEl.classList.add("hidden");
+          btn.disabled = true;
+          btn.textContent = "Signing in…";
+
+          try {
+            const res = await fetch("/api/admin/login", {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                username: document.getElementById("username").value.trim(),
+                password: document.getElementById("password").value,
+              }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Login failed.");
+            window.location.href = "/admin/terminal.html";
+          } catch (err) {
+            errorEl.textContent = err.message;
+            errorEl.classList.remove("hidden");
+            btn.disabled = false;
+            btn.textContent = "Sign in";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

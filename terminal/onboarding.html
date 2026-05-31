@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ZoneX Bot | Onboarding</title>
+    <meta name="description" content="ZoneX Bot post-purchase onboarding for MT5 installation and account activation." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../zonex-design.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-[100dvh] antialiased">
+    <div class="mesh-bg" aria-hidden="true"></div>
+    <div class="grid-fine" aria-hidden="true"></div>
+    <div class="noise" aria-hidden="true"></div>
+    <div class="page">
+      <header class="nav-island-wrap">
+        <div class="nav-island">
+          <a href="../index.html" class="brand-lock">
+            <img src="../dist/favicon.png" width="28" height="28" alt="" />
+            <span>ZoneX Bot</span>
+          </a>
+          <nav class="hidden items-center gap-1 sm:flex" aria-label="Main">
+            <a href="../index.html#track" class="btn-ghost nav-link-node !border-transparent !py-2">Details</a>
+            <a href="../index.html#faq" class="btn-ghost nav-link-node !border-transparent !py-2">FAQ</a>
+            <a href="../contact.html" class="btn-ghost nav-link-node !border-transparent !py-2">Contact</a>
+          </nav>
+          <div class="nav-island__tools">
+            <button
+              type="button"
+              class="nav-menu-btn sm:hidden"
+              aria-expanded="false"
+              aria-controls="mobile-nav-drawer"
+              aria-label="Open menu"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
+            <a href="/checkout" class="btn-primary btn-primary--nav-desktop !py-2 !pl-4 !text-[0.6rem]">Checkout</a>
+          </div>
+        </div>
+        <div id="mobile-nav-drawer" class="mobile-nav-drawer" hidden>
+          <div class="mobile-nav-drawer__panel">
+            <nav class="mobile-nav-drawer__links" aria-label="Mobile">
+              <a href="../index.html#track">Details</a>
+              <a href="../index.html#faq">FAQ</a>
+              <a href="../contact.html">Contact</a>
+              <a href="/checkout" class="mobile-nav-drawer__cta">Checkout · $200</a>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+    <main class="mx-auto max-w-4xl space-y-12 px-6 py-28">
+      <div class="space-y-2 border-b border-[#141416] pb-8">
+        <span class="block font-mono text-[10px] uppercase tracking-[0.4em] text-[#00ff7f]">Onboarding</span>
+        <h1 class="text-4xl font-extralight tracking-tight text-white">Setup your MT5 installation</h1>
+        <p id="provisioningStatus" class="font-mono text-[10px] uppercase tracking-widest text-zinc-600">Status: Awaiting Validation</p>
+      </div>
+
+      <!-- Phase 01 -->
+      <div class="premium-card space-y-6 rounded-2xl border border-[#1a1a1c] p-8">
+        <div class="flex flex-col justify-between gap-4 border-b border-[#141416] pb-4 sm:flex-row sm:items-center">
+          <div>
+            <span class="block font-mono text-[10px] uppercase text-[#00ff7f]">Step 1</span>
+            <h3 class="text-lg font-light text-white">Download MT5 EA file</h3>
+          </div>
+          <span class="font-mono text-[11px] uppercase tracking-wider text-zinc-500">XAUUSD only</span>
+        </div>
+
+        <p class="text-xs font-light leading-relaxed text-zinc-400">
+          Download the EA file to your device. Activation is linked to your approved MT5 account ID.
+        </p>
+
+        <div class="flex flex-col items-center justify-between gap-4 rounded-xl border border-[#141416] bg-[#020202] p-4 sm:flex-row">
+          <div class="flex items-center gap-3">
+            <div class="flex h-8 w-8 items-center justify-center rounded border border-[#00ff7f]/20 bg-[#00ff7f]/5">
+              <span class="font-mono text-xs text-[#00ff7f]">EX5</span>
+            </div>
+            <div class="font-mono text-xs">
+              <div class="text-white">ZoneX_XAUUSD.ex5</div>
+              <div class="text-[10px] text-zinc-600">Account-bound activation file</div>
+            </div>
+          </div>
+          <a
+            id="downloadBinaryLink"
+            href="#"
+            class="w-full rounded-lg bg-white px-6 py-2.5 text-center font-mono text-xs font-medium uppercase tracking-wider text-black transition-colors hover:bg-[#00ff7f] sm:w-auto"
+          >
+            Download EA
+          </a>
+        </div>
+        <p id="downloadHint" class="font-mono text-[10px] text-zinc-600">
+          Activation token required. Check your confirmation email for the 16-character token.
+        </p>
+      </div>
+
+      <!-- Phase 02 -->
+      <div class="premium-card space-y-4 rounded-2xl border border-[#141416] p-8">
+        <span class="block font-mono text-[10px] uppercase text-zinc-500">Step 2</span>
+        <h3 class="text-lg font-light text-white">Whitelist WebRequest domain in MT5</h3>
+
+        <p class="text-xs font-light leading-relaxed text-zinc-400">
+          To complete license checks, allow your terminal to communicate with the ZoneX verification domain:
+        </p>
+
+        <div class="space-y-3 rounded-xl border border-[#141416] bg-[#020202] p-5 font-mono text-xs text-zinc-400">
+          <div class="flex items-start gap-2">
+            <span class="text-[#00ff7f]">1.</span>
+            <span>Open MT5 → <code class="text-white">Tools → Options → Expert Advisors</code></span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-[#00ff7f]">2.</span>
+            <span>Enable: <code class="text-white">Allow WebRequest for listed URL</code></span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-[#00ff7f]">3.</span>
+            <span>
+              Add this domain:
+              <code id="whitelistDomain" class="select-all text-[#00ff7f]">https://your-production-domain.com</code>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 03 -->
+      <div class="premium-card space-y-4 rounded-2xl border border-[#141416] p-8">
+        <span class="block font-mono text-[10px] uppercase text-zinc-500">Step 3</span>
+        <h3 class="text-lg font-light text-white">Attach EA on XAUUSD chart</h3>
+
+        <div class="space-y-3 font-mono text-xs text-zinc-400">
+          <div class="flex items-start gap-2">
+            <span class="text-[#00ff7f]">1.</span>
+            <span>Copy <code class="text-white">ZoneX_XAUUSD.ex5</code> into your MT5 <code class="text-white">MQL5/Experts</code> folder and refresh the Navigator panel.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-[#00ff7f]">2.</span>
+            <span>Drag the EA onto an <code class="text-white">XAUUSD</code> chart (M15 recommended). Enable Algo Trading.</span>
+          </div>
+          <div class="flex items-start gap-2">
+            <span class="text-[#00ff7f]">3.</span>
+            <span>Confirm the ZoneX dashboard appears and license heartbeat returns <code class="text-[#00ff7f]">ACTIVE_RUNNING</code>.</span>
+          </div>
+        </div>
+      </div>
+      <p class="font-mono text-[10px] uppercase tracking-widest text-zinc-600">Speed-to-lead: if setup fails, use the contact page and include checkout ID for faster support routing.</p>
+    </main>
+
+    <footer class="border-t border-[#111112] py-12">
+      <div class="mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 px-6 font-mono text-[10px] uppercase tracking-widest text-zinc-600 sm:flex-row">
+        <span>ZoneX Bot · @zonexowner</span>
+        <span>Onboarding terminal</span>
+      </div>
+    </footer>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(window.location.search);
+        const token = (params.get("token") || params.get("activationToken") || "").trim().toUpperCase();
+        const status = params.get("status");
+        const account = params.get("account");
+
+        const downloadLink = document.getElementById("downloadBinaryLink");
+        const downloadHint = document.getElementById("downloadHint");
+        const provisioningStatus = document.getElementById("provisioningStatus");
+        const whitelistDomain = document.getElementById("whitelistDomain");
+
+        if (whitelistDomain) {
+          whitelistDomain.textContent = window.location.origin;
+        }
+
+        if (status === "mock_activated" || token) {
+          provisioningStatus.textContent = account
+            ? `Status: Validated · MT5 #${account}`
+            : "Status: Token Received · Ready for Extraction";
+          provisioningStatus.classList.remove("text-zinc-600");
+          provisioningStatus.classList.add("text-[#00ff7f]");
+        }
+
+        if (token && token.length === 16 && downloadLink) {
+          downloadLink.href = `/api/download/engine?token=${encodeURIComponent(token)}`;
+        } else if (downloadLink) {
+          downloadLink.classList.add("pointer-events-none", "opacity-40");
+          downloadLink.textContent = "Awaiting Token";
+          if (downloadHint) {
+            downloadHint.textContent =
+              "Append ?token=YOUR_16_CHAR_TOKEN to this URL after payment confirmation, or use the link from your activation email.";
+          }
+        }
+      });
+    </script>
+    <script src="../ux-system.js"></script>
+  </body>
+</html>
