@@ -3,27 +3,27 @@
   "builds": [
     {
       "src": "server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "index.html",
+          "checkout.html",
+          "contact.html",
+          "zonex-design.css",
+          "ux-system.js",
+          "relay-controller.js",
+          "assets/**",
+          "admin/**",
+          "terminal/**",
+          "dist/**",
+          "secure_assets/**"
+        ]
+      }
     }
   ],
   "routes": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/checkout",
-      "dest": "/checkout.html"
-    },
-    {
-      "src": "/contact",
-      "dest": "/contact.html"
-    },
-    {
-      "src": "/terminal/onboarding",
-      "dest": "/terminal/onboarding.html"
-    },
-    {
-      "src": "/api/(.*)",
+      "src": "/(.*)",
       "dest": "server.js"
     }
   ]

@@ -1501,6 +1501,10 @@ app.get("/checkout", (_req, res) => {
   res.sendFile(path.join(__dirname, "checkout.html"));
 });
 
+app.get("/contact", (_req, res) => {
+  res.sendFile(path.join(__dirname, "contact.html"));
+});
+
 app.get("/checkout.html", (_req, res) => {
   res.redirect(301, "/checkout");
 });
