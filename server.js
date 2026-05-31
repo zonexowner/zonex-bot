@@ -57,7 +57,30 @@ const partnerTxHash = (mt5Account) => `PARTNER_VIGCO_${mt5Account}`;
 const relayMode = String(process.env.RELAY_MODE || "telegram").toLowerCase();
 const webhookSecret = String(process.env.CRYPTO_WEBHOOK_SECRET || "");
 const coinbaseApiKey = String(process.env.COINBASE_API_KEY || "").trim();
+const nowPaymentsApiKey = String(process.env.NOWPAYMENTS_API_KEY || "").trim();
+const nowPaymentsIpnSecret = String(process.env.NOWPAYMENTS_IPN_SECRET || "").trim();
+const nowPaymentsSandbox = String(process.env.NOWPAYMENTS_SANDBOX || "").toLowerCase() === "true";
+const nowPaymentsApiBase = nowPaymentsSandbox
+  ? "https://api-sandbox.nowpayments.io/v1"
+  : "https://api.nowpayments.io/v1";
+const paymentProviderSetting = String(process.env.PAYMENT_PROVIDER || "").trim().toLowerCase();
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+const resolvePaymentProvider = () => {
+  if (["nowpayments", "coinbase", "static"].includes(paymentProviderSetting)) {
+    return paymentProviderSetting;
+  }
+  if (nowPaymentsApiKey) return "nowpayments";
+  if (coinbaseApiKey) return "coinbase";
+  return "static";
+};
+
+const nowPaymentsCurrencyMap = {
+  BTC: "btc",
+  ETH: "eth",
+  USDT_TRC20: "usdttrc20",
+  USDT_ERC20: "usdterc20",
+};
 
 const adminUsername = String(process.env.ADMIN_USERNAME || "admin").trim();
 const adminPassword = String(process.env.ADMIN_PASSWORD || "").trim();
@@ -224,6 +247,46 @@ const verifyWebhookSignature = (rawBody, signatureHeader) => {
   }
 };
 
+const sortObjectForNowPayments = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return value;
+  }
+  return Object.keys(value)
+    .sort()
+    .reduce((result, key) => {
+      const nested = value[key];
+      result[key] =
+        nested && typeof nested === "object" && !Array.isArray(nested)
+          ? sortObjectForNowPayments(nested)
+          : nested;
+      return result;
+    }, {});
+};
+
+const verifyNowPaymentsIpnSignature = (payload, signatureHeader) => {
+  if (!signatureHeader || !nowPaymentsIpnSecret || !payload || typeof payload !== "object") {
+    return false;
+  }
+  const expected = crypto
+    .createHmac("sha512", nowPaymentsIpnSecret)
+    .update(JSON.stringify(sortObjectForNowPayments(payload)))
+    .digest("hex");
+  const incoming = String(signatureHeader).trim();
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(incoming));
+  } catch {
+    return false;
+  }
+};
+
+const buildPublicSiteUrl = (req) => {
+  const configured = String(process.env.APP_URL || "").trim().replace(/\/$/, "");
+  if (configured && !/localhost|127\.0\.0\.1/i.test(configured)) {
+    return configured;
+  }
+  return `${req.protocol}://${req.get("host")}`;
+};
+
 const sendTelegramMessage = async (payload, targetType) => {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -356,7 +419,7 @@ const fulfillConfirmedPayment = async ({ email, mt5Account, txHash, eventId = nu
   return { duplicate: false, activationToken };
 };
 
-const createProviderCharge = async ({ req, metadata, amountUsd }) => {
+const createCoinbaseCharge = async ({ req, metadata, amountUsd }) => {
   const chargePayload = {
     name: "ZoneX Terminal Activation",
     description: "Lifetime License Asset Secure Provisioning - XAUUSD Monotarget Engine",
@@ -369,19 +432,9 @@ const createProviderCharge = async ({ req, metadata, amountUsd }) => {
       ...metadata,
       asset_lock: "XAUUSD",
     },
-    redirect_url: `${req.protocol}://${req.get("host")}/terminal/onboarding`,
-    cancel_url: `${req.protocol}://${req.get("host")}/checkout`,
+    redirect_url: `${buildPublicSiteUrl(req)}/terminal/onboarding`,
+    cancel_url: `${buildPublicSiteUrl(req)}/checkout`,
   };
-
-  if (!coinbaseApiKey) {
-    const mockInvoiceId = crypto.randomBytes(8).toString("hex");
-    return {
-      mockMode: true,
-      chargeId: `chg_${mockInvoiceId}`,
-      hostedUrl: `/terminal/onboarding?status=mock_activated&account=${encodeURIComponent(metadata.mt5_account)}`,
-      providerMetadata: chargePayload.metadata,
-    };
-  }
 
   const providerResponse = await fetch("https://api.commerce.coinbase.com/charges", {
     method: "POST",
@@ -400,13 +453,184 @@ const createProviderCharge = async ({ req, metadata, amountUsd }) => {
 
   return {
     mockMode: false,
+    provider: "coinbase",
     chargeId: resultData?.data?.id,
     hostedUrl: resultData?.data?.hosted_url,
     providerMetadata: chargePayload.metadata,
   };
 };
 
-// Keep this route before express.json so raw signature checks work.
+const createNowPaymentsInvoice = async ({ req, metadata, amountUsd, licenseId, payCurrency }) => {
+  const payCurrencyCode = nowPaymentsCurrencyMap[payCurrency];
+  if (!payCurrencyCode) {
+    throw new Error(`Unsupported NOWPayments currency mapping for ${payCurrency}.`);
+  }
+
+  const siteUrl = buildPublicSiteUrl(req);
+  const invoicePayload = {
+    price_amount: Number(amountUsd.toFixed(2)),
+    price_currency: "usd",
+    pay_currency: payCurrencyCode,
+    order_id: String(licenseId),
+    order_description: `ZoneX Bot license · MT5 #${metadata.mt5_account} · ${metadata.email}`,
+    ipn_callback_url: `${siteUrl}/api/webhooks/nowpayments`,
+    success_url: `${siteUrl}/terminal/onboarding?checkoutId=${encodeURIComponent(String(licenseId))}`,
+    cancel_url: `${siteUrl}/checkout`,
+    is_fixed_rate: true,
+    is_fee_paid_by_user: false,
+  };
+
+  const providerResponse = await fetch(`${nowPaymentsApiBase}/invoice`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": nowPaymentsApiKey,
+    },
+    body: JSON.stringify(invoicePayload),
+  });
+  const resultData = await providerResponse.json();
+
+  if (!providerResponse.ok) {
+    throw new Error(resultData?.message || resultData?.error || "NOWPayments invoice creation failed.");
+  }
+
+  const hostedUrl = resultData?.invoice_url || resultData?.url;
+  if (!hostedUrl) {
+    throw new Error("NOWPayments did not return a hosted invoice URL.");
+  }
+
+  return {
+    mockMode: false,
+    provider: "nowpayments",
+    chargeId: String(resultData?.id || resultData?.token_id || ""),
+    hostedUrl,
+    providerMetadata: {
+      ...metadata,
+      asset_lock: "XAUUSD",
+      order_id: String(licenseId),
+    },
+  };
+};
+
+const createPaymentSession = async ({ req, metadata, amountUsd, licenseId, payCurrency }) => {
+  const provider = resolvePaymentProvider();
+
+  if (provider === "nowpayments") {
+    if (!nowPaymentsApiKey) {
+      throw new Error("NOWPAYMENTS_API_KEY is missing.");
+    }
+    return createNowPaymentsInvoice({ req, metadata, amountUsd, licenseId, payCurrency });
+  }
+
+  if (provider === "coinbase") {
+    if (!coinbaseApiKey) {
+      throw new Error("COINBASE_API_KEY is missing.");
+    }
+    return createCoinbaseCharge({ req, metadata, amountUsd });
+  }
+
+  return {
+    mockMode: false,
+    provider: "static",
+    chargeId: null,
+    hostedUrl: null,
+    providerMetadata: metadata,
+  };
+};
+
+// Keep webhook routes before express.json so raw / signed body checks work.
+app.post("/api/webhooks/nowpayments", express.json(), async (req, res) => {
+  const signature = req.headers["x-nowpayments-sig"];
+  if (!verifyNowPaymentsIpnSignature(req.body, signature)) {
+    return res.status(401).json({ error: "Missing or invalid NOWPayments IPN signature." });
+  }
+
+  const paymentStatus = String(req.body?.payment_status || "").toLowerCase();
+  const paymentId = req.body?.payment_id;
+  const orderId = String(req.body?.order_id || "").trim();
+
+  if (!["finished", "confirmed"].includes(paymentStatus)) {
+    return res.status(200).json({ received: true, status: paymentStatus || "ignored" });
+  }
+
+  if (relayMode !== "supabase") {
+    return res.status(200).json({ received: true, mode: "mock" });
+  }
+
+  if (!orderId || !paymentId) {
+    return res.status(400).json({ error: "NOWPayments IPN missing order_id or payment_id." });
+  }
+
+  try {
+    const { data: license, error: licenseLookupError } = await supabase
+      .from("licenses")
+      .select("email, mt5_account, payment_status")
+      .eq("id", orderId)
+      .maybeSingle();
+
+    if (licenseLookupError) throw licenseLookupError;
+    if (!license) {
+      throw new Error(`No checkout intent found for order_id ${orderId}.`);
+    }
+
+    const txHash = String(
+      req.body?.payin_hash ||
+        req.body?.outcome_hash ||
+        req.body?.purchase_id ||
+        paymentId
+    );
+    const eventId = `nowpayments:${paymentId}`;
+
+    const result = await fulfillConfirmedPayment({
+      email: license.email,
+      mt5Account: license.mt5_account,
+      txHash,
+      eventId,
+    });
+
+    if (result.duplicate) {
+      return res.status(200).json({ received: true, note: "Idempotency guard active. Duplicate bypassed." });
+    }
+
+    const delivered = await dispatchAccessPackage(
+      license.email,
+      license.mt5_account,
+      txHash,
+      result.activationToken
+    );
+    if (!delivered) {
+      console.error("[NOWPayments IPN] DB updated, but Resend failed to deliver email.");
+    }
+
+    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
+      const alertMessage =
+        "PAYMENT CONFIRMED (NOWPayments)\n" +
+        "━━━━━━━━━━━━━━━━━━━━\n" +
+        `OPERATOR: ${license.email}\n` +
+        `TERMINAL ID: ${license.mt5_account}\n` +
+        `PAYMENT ID: ${paymentId}\n` +
+        "ASSET LOCK: XAUUSD ONLY\n" +
+        "PROVISIONING: ACCESS GRANTED\n" +
+        `TX HASH: ${txHash || "N/A"}\n` +
+        "━━━━━━━━━━━━━━━━━━━━";
+
+      await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: process.env.TELEGRAM_CHAT_ID,
+          text: alertMessage,
+        }),
+      });
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("[NOWPayments IPN]", err.message);
+    return res.status(500).json({ error: err.message || "NOWPayments fulfillment failed." });
+  }
+});
+
 app.post("/api/webhooks/crypto-billing", express.raw({ type: "application/json" }), async (req, res) => {
   const signature = req.headers["x-cc-webhook-signature"];
   if (!verifyWebhookSignature(req.body, signature)) {
@@ -1114,12 +1338,6 @@ app.post("/api/checkout/initialize", async (req, res) => {
       });
     }
 
-    const providerResult = await createProviderCharge({
-      req,
-      metadata,
-      amountUsd: expectedAmount,
-    });
-
     const leadPayload = {
       email: cleanEmail,
       broker_id: cleanBrokerId,
@@ -1180,9 +1398,18 @@ app.post("/api/checkout/initialize", async (req, res) => {
       return res.status(500).json({ error: "Could not initialize checkout intent." });
     }
 
+    const providerResult = await createPaymentSession({
+      req,
+      metadata,
+      amountUsd: expectedAmount,
+      licenseId: data.id,
+      payCurrency: cleanCurrency,
+    });
+
     return res.status(200).json({
       success: true,
       mockMode: providerResult.mockMode,
+      paymentProvider: providerResult.provider || resolvePaymentProvider(),
       hosted_url: providerResult.hostedUrl,
       charge_id: providerResult.chargeId,
       providerMetadata: providerResult.providerMetadata,

@@ -194,6 +194,37 @@
               "Append ?token=YOUR_16_CHAR_TOKEN to this URL after payment confirmation, or use the link from your activation email.";
           }
         }
+
+        const checkoutId = params.get("checkoutId");
+        if (checkoutId && (!token || token.length !== 16)) {
+          provisioningStatus.textContent = "Status: Waiting for payment confirmation…";
+          const pollCheckout = async () => {
+            try {
+              const res = await fetch(`/api/checkout/status/${encodeURIComponent(checkoutId)}`);
+              const data = await res.json();
+              if (!res.ok || data.paymentStatus !== "confirmed") return;
+
+              provisioningStatus.textContent = account
+                ? `Status: Validated · MT5 #${account}`
+                : "Status: Payment confirmed · Ready for extraction";
+              provisioningStatus.classList.remove("text-zinc-600");
+              provisioningStatus.classList.add("text-[#00ff7f]");
+
+              if (data.activationToken && downloadLink) {
+                downloadLink.classList.remove("pointer-events-none", "opacity-40");
+                downloadLink.textContent = "Download ZoneX_XAUUSD.ex5";
+                downloadLink.href = `/api/download/engine?token=${encodeURIComponent(data.activationToken)}`;
+                if (downloadHint) {
+                  downloadHint.textContent = "Your secure deployment token is active. Download and install the EA.";
+                }
+              }
+            } catch (err) {
+              console.warn("Checkout status poll:", err);
+            }
+          };
+          pollCheckout();
+          window.setInterval(pollCheckout, 8000);
+        }
       });
     </script>
     <script src="../ux-system.js"></script>

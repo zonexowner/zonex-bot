@@ -8,7 +8,22 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "handle": "filesystem"
+    },
+    {
+      "src": "/checkout",
+      "dest": "/checkout.html"
+    },
+    {
+      "src": "/contact",
+      "dest": "/contact.html"
+    },
+    {
+      "src": "/terminal/onboarding",
+      "dest": "/terminal/onboarding.html"
+    },
+    {
+      "src": "/api/(.*)",
       "dest": "server.js"
     }
   ]

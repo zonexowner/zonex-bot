@@ -11,15 +11,13 @@ const { createClient } = require("@supabase/supabase-js");
 const ROOT = path.join(__dirname, "..");
 const EX5_PATH = path.join(ROOT, "secure_assets", "ZoneX_XAUUSD.ex5");
 
-const required = [
+const coreRequired = [
   { key: "SUPABASE_URL", hint: "Supabase → Project Settings → API → Project URL" },
   { key: "SUPABASE_SERVICE_ROLE_KEY", hint: "Supabase → API → service_role (secret, not anon)" },
-  { key: "APP_URL", hint: "Public https URL, e.g. https://zonex.yourdomain.com" },
+  { key: "APP_URL", hint: "Public https URL, e.g. https://zonexbot.com" },
   { key: "RELAY_MODE", hint: "Must be: supabase" },
   { key: "RESEND_API_KEY", hint: "Resend → API Keys → Create" },
   { key: "RESEND_FROM_EMAIL", hint: "Verified sender, e.g. ZoneX <hello@yourdomain.com>" },
-  { key: "COINBASE_API_KEY", hint: "Coinbase Commerce → Settings → API keys" },
-  { key: "CRYPTO_WEBHOOK_SECRET", hint: "Coinbase Commerce → Settings → Webhook shared secret" },
 ];
 
 const recommended = [
@@ -36,6 +34,18 @@ const placeholder = (value) => {
   return /YOUR_|yourdomain|example|changeme|xxx/i.test(v);
 };
 
+const resolvePaymentProvider = () => {
+  const setting = String(process.env.PAYMENT_PROVIDER || "").trim().toLowerCase();
+  if (["nowpayments", "coinbase", "static"].includes(setting)) return setting;
+  if (process.env.NOWPAYMENTS_API_KEY && !placeholder(process.env.NOWPAYMENTS_API_KEY)) {
+    return "nowpayments";
+  }
+  if (process.env.COINBASE_API_KEY && !placeholder(process.env.COINBASE_API_KEY)) {
+    return "coinbase";
+  }
+  return "static";
+};
+
 const ok = (msg) => console.log(`  ✓ ${msg}`);
 const warn = (msg) => console.log(`  ⚠ ${msg}`);
 const fail = (msg) => console.log(`  ✗ ${msg}`);
@@ -50,9 +60,10 @@ async function main() {
   }
 
   let blockers = 0;
+  const paymentProvider = resolvePaymentProvider();
 
-  console.log("1) Environment variables\n");
-  for (const { key, hint } of required) {
+  console.log("1) Core environment variables\n");
+  for (const { key, hint } of coreRequired) {
     const val = process.env[key];
     if (!val || placeholder(val)) {
       fail(`${key} missing or still placeholder`);
@@ -68,29 +79,70 @@ async function main() {
     blockers += 1;
   }
 
-  console.log("\n2) Recommended\n");
+  console.log(`\n2) Payment provider: ${paymentProvider}\n`);
+
+  if (paymentProvider === "nowpayments") {
+    for (const { key, hint } of [
+      { key: "NOWPAYMENTS_API_KEY", hint: "NOWPayments → Settings → API key" },
+      { key: "NOWPAYMENTS_IPN_SECRET", hint: "NOWPayments → Settings → IPN secret key" },
+    ]) {
+      const val = process.env[key];
+      if (!val || placeholder(val)) {
+        fail(`${key} missing or still placeholder`);
+        console.log(`     → ${hint}`);
+        blockers += 1;
+      } else {
+        ok(key);
+      }
+    }
+  } else if (paymentProvider === "coinbase") {
+    for (const { key, hint } of [
+      { key: "COINBASE_API_KEY", hint: "Coinbase Commerce → Settings → API keys" },
+      { key: "CRYPTO_WEBHOOK_SECRET", hint: "Coinbase Commerce → Settings → Webhook shared secret" },
+    ]) {
+      const val = process.env[key];
+      if (!val || placeholder(val)) {
+        fail(`${key} missing or still placeholder`);
+        console.log(`     → ${hint}`);
+        blockers += 1;
+      } else {
+        ok(key);
+      }
+    }
+  } else {
+    warn("Static wallet mode — set PAYMENT_WALLET_* addresses and confirm payments manually in admin");
+  }
+
+  console.log("\n3) Recommended\n");
   for (const { key, hint } of recommended) {
     const val = process.env[key];
     if (!val || placeholder(val)) warn(`${key} not set — ${hint}`);
     else ok(key);
   }
 
-  console.log("\n3) EA binary (download after payment)\n");
+  console.log("\n4) EA binary (download after payment)\n");
   if (fs.existsSync(EX5_PATH)) ok("secure_assets/ZoneX_XAUUSD.ex5 found");
   else {
     warn("secure_assets/ZoneX_XAUUSD.ex5 missing — compile MQ5 and place file before go-live");
   }
 
   const appUrl = (process.env.APP_URL || "").replace(/\/$/, "");
-  console.log("\n4) Coinbase Commerce webhook (paste in dashboard)\n");
+  console.log("\n5) Payment webhook URLs\n");
   if (appUrl && !placeholder(appUrl)) {
-    console.log(`  ${appUrl}/api/webhooks/crypto-billing`);
-    console.log("  Enable event: charge:confirmed");
+    if (paymentProvider === "nowpayments") {
+      console.log(`  ${appUrl}/api/webhooks/nowpayments`);
+      console.log("  NOWPayments also accepts ipn_callback_url per invoice (already set in code)");
+    } else if (paymentProvider === "coinbase") {
+      console.log(`  ${appUrl}/api/webhooks/crypto-billing`);
+      console.log("  Enable event: charge:confirmed");
+    } else {
+      console.log("  No auto webhook in static wallet mode");
+    }
   } else {
     warn("Set APP_URL first to print webhook URL");
   }
 
-  console.log("\n5) Live service checks\n");
+  console.log("\n6) Live service checks\n");
 
   if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && !placeholder(process.env.SUPABASE_URL)) {
     try {
@@ -142,7 +194,26 @@ async function main() {
     }
   }
 
-  if (process.env.COINBASE_API_KEY && !placeholder(process.env.COINBASE_API_KEY)) {
+  if (paymentProvider === "nowpayments" && process.env.NOWPAYMENTS_API_KEY && !placeholder(process.env.NOWPAYMENTS_API_KEY)) {
+    try {
+      const apiBase =
+        String(process.env.NOWPAYMENTS_SANDBOX || "").toLowerCase() === "true"
+          ? "https://api-sandbox.nowpayments.io/v1"
+          : "https://api.nowpayments.io/v1";
+      const res = await fetch(`${apiBase}/status`, {
+        headers: { "x-api-key": process.env.NOWPAYMENTS_API_KEY },
+      });
+      if (res.status === 401 || res.status === 403) {
+        fail("NOWPayments API key rejected");
+        blockers += 1;
+      } else ok(`NOWPayments API reachable (HTTP ${res.status})`);
+    } catch (e) {
+      fail(`NOWPayments: ${e.message}`);
+      blockers += 1;
+    }
+  }
+
+  if (paymentProvider === "coinbase" && process.env.COINBASE_API_KEY && !placeholder(process.env.COINBASE_API_KEY)) {
     try {
       const res = await fetch("https://api.commerce.coinbase.com/charges", {
         method: "GET",
@@ -165,10 +236,10 @@ async function main() {
     ok("Resend API key present (send test from dashboard after domain verify)");
   }
 
-  console.log("\n6) Local dev note\n");
-  console.log("  Coinbase webhooks need a public HTTPS URL.");
+  console.log("\n7) Local dev note\n");
+  console.log("  Payment webhooks need a public HTTPS URL.");
   console.log("  For local testing use ngrok: ngrok http 3001");
-  console.log("  Then set APP_URL to the ngrok https URL and update Coinbase webhook.\n");
+  console.log("  Then set APP_URL to the ngrok https URL and update your payment provider callback.\n");
 
   if (blockers > 0) {
     console.log(`Setup incomplete — ${blockers} blocker(s). Fix .env and re-run: npm run setup:check\n`);
