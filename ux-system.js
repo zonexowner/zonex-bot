@@ -41,11 +41,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const revealTargets = document.querySelectorAll(
       "section:not(.no-reveal), .reveal-element, #bot-info, #testimonials, #checkout-terminal, .strategy-card"
     );
+    const isMobile = window.matchMedia("(max-width: 639px)").matches;
+    const useTransformReveal = !window.matchMedia("(prefers-reduced-motion: reduce)").matches && !isMobile;
 
     revealTargets.forEach((target) => {
       if (!target.classList.contains("reveal-initialized")) {
         target.style.opacity = "0";
-        target.style.transform = "translateY(16px)";
+        if (useTransformReveal) {
+          target.style.transform = "translateY(16px)";
+        }
         target.style.transition =
           "opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)";
         target.classList.add("reveal-initialized");
@@ -58,7 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (entry.isIntersecting) {
             const target = entry.target;
             target.style.opacity = "1";
-            target.style.transform = "translateY(0)";
+            if (useTransformReveal) {
+              target.style.transform = "translateY(0)";
+            }
             observer.unobserve(target);
           }
         });
@@ -111,19 +117,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const pill = document.getElementById("live-cta-pill");
     if (!pill) return;
 
+    const hero = document.querySelector(".hero-section");
     const bottomCta = document.getElementById("bottom-cta");
-    if (!bottomCta) return;
+    let heroVisible = Boolean(hero);
+    let bottomVisible = false;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          pill.classList.toggle("is-hidden", entry.isIntersecting);
-        });
-      },
-      { threshold: 0.35 }
-    );
+    const syncPill = () => {
+      pill.classList.toggle("is-hidden", heroVisible || bottomVisible);
+    };
 
-    observer.observe(bottomCta);
+    if (hero) {
+      new IntersectionObserver(
+        (entries) => {
+          heroVisible = Boolean(entries[0]?.isIntersecting);
+          syncPill();
+        },
+        { threshold: 0.15 }
+      ).observe(hero);
+    }
+
+    if (bottomCta) {
+      new IntersectionObserver(
+        (entries) => {
+          bottomVisible = Boolean(entries[0]?.isIntersecting);
+          syncPill();
+        },
+        { threshold: 0.35 }
+      ).observe(bottomCta);
+    }
+
+    syncPill();
   };
 
   const initializeSmoothAnchors = () => {

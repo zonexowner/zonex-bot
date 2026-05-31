@@ -86,7 +86,11 @@ html {
 
 .page {
   position: relative;
-  z-index: 2;
+  z-index: 1;
+}
+
+.site-chrome {
+  z-index: 100;
 }
 
 .section-shell {
@@ -158,16 +162,28 @@ html {
     z-index: 100;
     isolation: isolate;
     padding: 0.75rem 1rem 0.5rem;
+    padding-top: max(0.75rem, env(safe-area-inset-top));
     margin-bottom: 0;
-    background: rgba(5, 5, 5, 0.88);
+    background: #050505;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+
+  .nav-island-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #050505;
+    z-index: -1;
   }
 
   .nav-island {
+    position: relative;
+    z-index: 1;
     max-width: none;
-    background: rgba(10, 10, 12, 0.95);
+    background: rgba(10, 10, 12, 0.98);
   }
 
   .mobile-nav-drawer {
@@ -177,17 +193,29 @@ html {
     padding: 0;
   }
 
-  .page > main {
-    position: relative;
-    z-index: 1;
+  .page main {
     padding-top: 4.75rem;
     padding-bottom: 6.5rem;
   }
 
-  .page > footer {
-    position: relative;
-    z-index: 1;
+  .page footer {
     padding-bottom: 5.5rem;
+  }
+
+  main section.reveal-initialized {
+    transform: none !important;
+  }
+
+  .stat-float {
+    z-index: 1;
+  }
+
+  .section-gap {
+    padding-bottom: 4.5rem;
+  }
+
+  .hero-section {
+    padding-bottom: 2rem;
   }
 }
 
