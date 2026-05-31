@@ -15,10 +15,6 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body {
   background-color: var(--bg-main);
   color: var(--text);
@@ -78,6 +74,16 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 .page {
   position: relative;
   z-index: 2;
@@ -90,6 +96,27 @@ body {
   margin-right: auto;
   padding-left: 1.25rem;
   padding-right: 1.25rem;
+}
+
+.hero-section {
+  min-height: 100dvh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 5rem;
+  padding-bottom: 1.5rem;
+}
+
+.hero-section .section-shell {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .hero-section {
+    padding-top: 5.5rem;
+    padding-bottom: 2rem;
+  }
 }
 
 /* Floating nav island */
@@ -497,6 +524,55 @@ body {
 }
 
 /* Telegram 9:16 testimonial marquee */
+.results-marquee-wrap {
+  position: relative;
+  padding: 1.25rem 0 0.5rem;
+}
+
+.results-marquee-glow {
+  position: absolute;
+  inset: 15% 8% 5%;
+  background: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.14) 0%, rgba(0, 255, 127, 0.06) 45%, transparent 72%);
+  filter: blur(48px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.results-marquee-wrap .tg-marquee {
+  position: relative;
+  z-index: 1;
+}
+
+.faq-grid {
+  display: grid;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+@media (min-width: 640px) {
+  .faq-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.faq-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.site-footer-disclaimer {
+  margin-top: 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--text-dim);
+  line-height: 1.5;
+  max-width: 42rem;
+}
+
 .tg-marquee {
   position: relative;
   overflow: hidden;

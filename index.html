@@ -79,9 +79,10 @@
       </header>
 
       <main>
-        <section class="section-shell no-reveal pb-8 pt-28 lg:pt-36">
-          <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
-            <div class="space-y-6">
+        <section class="hero-section no-reveal">
+          <div class="section-shell py-12 lg:py-14">
+          <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
+            <div class="space-y-5">
               <h1 class="hero-title text-[var(--text)]">
                 ZoneX Bot
                 <em class="mt-2 block">XAUUSD MT5 Expert Advisor</em>
@@ -146,6 +147,7 @@
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </section>
 
@@ -368,7 +370,7 @@
         <section id="results" class="section-gap border-t border-[var(--border-strong)] bg-[var(--bg-elevated)]/30 scroll-mt-28">
           <div class="section-shell space-y-6">
             <div class="max-w-2xl">
-              <p class="mono-label mb-2">Operator reports</p>
+              <p class="mono-label mb-3">Operator reports</p>
               <h2 class="section-title">Consistent results vary by account</h2>
               <p class="mt-3 text-sm leading-relaxed text-[var(--text-muted)]">
                 The $200 license is fixed - reported outcomes scale with balance, risk settings, and conditions.
@@ -400,9 +402,12 @@
               Not financial advice. Screenshots are operator-submitted, not guaranteed performance.
             </p>
 
-            <div class="tg-marquee" aria-label="Telegram operator testimonials">
-              <div class="tg-marquee__track" id="tg-testimonial-track">
-                <div class="tg-marquee__group" id="tg-testimonial-group"></div>
+            <div class="results-marquee-wrap">
+              <div class="results-marquee-glow" aria-hidden="true"></div>
+              <div class="tg-marquee" aria-label="Telegram operator testimonials">
+                <div class="tg-marquee__track" id="tg-testimonial-track">
+                  <div class="tg-marquee__group" id="tg-testimonial-group"></div>
+                </div>
               </div>
             </div>
 
@@ -445,36 +450,36 @@
               <p class="mono-label mb-2">FAQ</p>
               <h2 class="section-title">Quick answers</h2>
             </div>
-            <div class="grid gap-3 sm:grid-cols-2">
-              <article class="glass rounded-xl p-4">
+            <div class="faq-grid">
+              <article class="faq-card glass rounded-xl p-4">
                 <h3 class="text-sm text-[var(--text)]">Subscription?</h3>
                 <p class="mt-1.5 text-sm text-[var(--text-muted)]">$200 one-time crypto on checkout, plus partner broker signup required.</p>
               </article>
-              <article class="glass rounded-xl p-4">
+              <article class="faq-card glass rounded-xl p-4">
                 <h3 class="text-sm text-[var(--text)]">Broker?</h3>
                 <p class="mt-1.5 text-sm text-[var(--text-muted)]">Partner broker signup required (link on checkout). Hedging MT5 account.</p>
               </article>
-              <article class="glass rounded-xl p-4">
+              <article class="faq-card glass rounded-xl p-4">
                 <h3 class="text-sm text-[var(--text)]">Change MT5 account?</h3>
                 <p class="mt-1.5 text-sm text-[var(--text-muted)]">One active ID per license. Transfer via support (~24h).</p>
               </article>
-              <article class="glass rounded-xl p-4">
+              <article class="faq-card glass rounded-xl p-4">
                 <h3 class="text-sm text-[var(--text)]">Access speed?</h3>
                 <p class="mt-1.5 text-sm text-[var(--text-muted)]">After crypto confirms (~1 block). Onboarding email with download link follows.</p>
               </article>
-              <article class="glass rounded-xl p-4">
+              <article class="faq-card glass rounded-xl p-4">
                 <h3 class="text-sm text-[var(--text)]">Refunds?</h3>
                 <p class="mt-1.5 text-sm text-[var(--text-muted)]">Digital delivery - all sales final. Setup support included.</p>
               </article>
-              <article class="glass rounded-xl p-4">
+              <article class="faq-card glass rounded-xl p-4">
                 <h3 class="text-sm text-[var(--text)]">Plug and play?</h3>
                 <p class="mt-1.5 text-sm text-[var(--text-muted)]">Guided setup - MT5 whitelist + chart attach required.</p>
               </article>
-              <article class="glass rounded-xl p-4">
+              <article class="faq-card glass rounded-xl p-4">
                 <h3 class="text-sm text-[var(--text)]">VPS?</h3>
                 <p class="mt-1.5 text-sm text-[var(--text-muted)]">Recommended for stable uptime.</p>
               </article>
-              <article class="glass rounded-xl p-4">
+              <article class="faq-card glass rounded-xl p-4">
                 <h3 class="text-sm text-[var(--text)]">Account-bound?</h3>
                 <p class="mt-1.5 text-sm text-[var(--text-muted)]">License locks to one MT5 login number.</p>
               </article>
@@ -520,6 +525,9 @@
       <footer class="border-t border-[var(--border-strong)] py-8">
         <div class="section-shell site-footer font-mono text-[10px] uppercase tracking-widest text-[var(--text-dim)]">
           <span>ZoneX Bot · XAUUSD · MT5</span>
+          <p class="site-footer-disclaimer">
+            Trading involves risk. Past results do not guarantee future performance.
+          </p>
           <nav class="site-footer-links" aria-label="Site links">
             <a href="https://zonexbot.com">zonexbot.com</a>
             <a href="https://t.me/ZoneXBotOfficial" target="_blank" rel="noopener noreferrer">Telegram</a>

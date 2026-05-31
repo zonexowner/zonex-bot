@@ -126,8 +126,38 @@ document.addEventListener("DOMContentLoaded", () => {
     observer.observe(bottomCta);
   };
 
+  const initializeSmoothAnchors = () => {
+    const scrollToHash = (hash, replace = false) => {
+      if (!hash || hash === "#") return;
+      const target = document.querySelector(hash);
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (replace) {
+        history.replaceState(null, "", hash);
+      } else {
+        history.pushState(null, "", hash);
+      }
+    };
+
+    document.querySelectorAll('a[href^="#"]').forEach((link) => {
+      link.addEventListener("click", (event) => {
+        const hash = link.getAttribute("href");
+        if (!hash || hash === "#") return;
+        const target = document.querySelector(hash);
+        if (!target) return;
+        event.preventDefault();
+        scrollToHash(hash);
+      });
+    });
+
+    if (window.location.hash) {
+      requestAnimationFrame(() => scrollToHash(window.location.hash, true));
+    }
+  };
+
   applyActiveNavigationState();
   initializeScrollReveal();
   initializeMobileNav();
   initializeLivePill();
+  initializeSmoothAnchors();
 });
