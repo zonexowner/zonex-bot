@@ -92,18 +92,18 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
         if (!payload.email || !payload.mt5_account) {
-          showFormMessage(form, "error", "Email and MT5 account number are required.");
+          showFormMessage(form, "error", "Email and terminal ID number are required.");
           setButtonState(submitBtn, "reset", originalBtnText);
           return;
         }
         const mt5Digits = String(payload.mt5_account).trim();
         if (!/^\d{5,12}$/.test(mt5Digits)) {
-          showFormMessage(form, "error", "MT5 account must be 5-12 digits.");
+          showFormMessage(form, "error", "Terminal ID must be 5-12 digits.");
           setButtonState(submitBtn, "reset", originalBtnText);
           return;
         }
         if (!requirePartner && !payload.broker_id) {
-          showFormMessage(form, "error", "Email, broker account ID, and MT5 account are required.");
+          showFormMessage(form, "error", "Email, broker account ID, and terminal ID are required.");
           setButtonState(submitBtn, "reset", originalBtnText);
           return;
         }
@@ -123,13 +123,13 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         if (!payload.email || !payload.mt5_account) {
-          showFormMessage(form, "error", "Email and MT5 account number are required.");
+          showFormMessage(form, "error", "Email and terminal ID number are required.");
           setButtonState(submitBtn, "reset", originalBtnText);
           return;
         }
         const mt5Digits = String(payload.mt5_account).trim();
         if (!/^\d{5,12}$/.test(mt5Digits)) {
-          showFormMessage(form, "error", "MT5 login must be 5-12 digits (numbers only).");
+          showFormMessage(form, "error", "Terminal ID must be 5-12 digits (numbers only).");
           setButtonState(submitBtn, "reset", originalBtnText);
           return;
         }
